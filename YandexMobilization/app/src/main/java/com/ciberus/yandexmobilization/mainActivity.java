@@ -2,16 +2,30 @@ package com.ciberus.yandexmobilization;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.location.Address;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.JsonReader;
+import android.util.JsonToken;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewDebug;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.Toast;
 
+import com.android.volley.Cache;
+import com.android.volley.NetworkResponse;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -21,12 +35,17 @@ import com.nostra13.universalimageloader.core.display.SimpleBitmapDisplayer;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONStringer;
+import org.json.JSONTokener;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.CacheRequest;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 public class mainActivity extends AppCompatActivity {
@@ -42,12 +61,15 @@ public class mainActivity extends AppCompatActivity {
     GridView gvMain;
     ImageLoader imageLoader;
     String requestArtistsURL = "http://cache-default03e.cdn.yandex.net/download.cdn.yandex.net/mobilization-2016/artists.json";
+    RequestQueue requestQueue;
+
 
     public static String LOG_TAG = "my_log";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
         DisplayImageOptions options = new DisplayImageOptions.Builder()
                 .showStubImage(R.drawable.unknown)
@@ -66,11 +88,104 @@ public class mainActivity extends AppCompatActivity {
         imageLoader = ImageLoader.getInstance();
         imageLoader.init(config);
 
-        setContentView(R.layout.activity_main);
-
         gvMain = (GridView)findViewById(R.id.gvMain);
+        requestQueue = Volley.newRequestQueue(this);
 
-        new ParseTask().execute();
+        //Делаем кэшируемый запрос "Исполнителей"
+        CacheRequest jsonArtistsRequest = new CacheRequest(0, requestArtistsURL, new Response.Listener<NetworkResponse>() {
+                    @Override
+                    public void onResponse(NetworkResponse response) {
+                        try {
+                            final String jsonString = new String(response.data,
+                                    /*HttpHeaderParser.parseCharset(response.headers)*/Charset.defaultCharset()); //По дефолту берется неправильная кодировка из заголовков
+
+                            artists = new ArrayList<Artist>();
+
+                            JSONArray artistsJSON = new JSONArray(jsonString);
+
+                            JSONObject curArtistJSON;
+/*
+                            Artist curArtist;
+
+                            JSONArray curArtistGenresJSON;
+                            ArrayList<String> tempArtistGenres;
+                            JSONObject curArtistCoverJSON;
+                            //Artist.Covers tempArtistCovers;
+*/
+                            Artist artist = new Artist();
+
+                            //C
+                            for (int i = 0; i < artistsJSON.length(); i++) {
+                                try {
+
+                                    curArtistJSON = artistsJSON.getJSONObject(i);
+                                    //tempArtistGenres = new String[artistJSON.getJSONArray("Genres").length()];
+                                    artist = Artist.deserialize(curArtistJSON);
+
+                                    /*curArtist = new Artist();
+                                    if (!curArtistJSON.isNull("id"))
+                                        curArtist.id = curArtistJSON.getInt("id");
+                                    if (!curArtistJSON.isNull("name"))
+                                        curArtist.name = curArtistJSON.getString("name");
+                                    if (!curArtistJSON.isNull("tracks"))
+                                        curArtist.tracks = curArtistJSON.getInt("tracks");
+                                    if (!curArtistJSON.isNull("albums"))
+                                        curArtist.albums = curArtistJSON.getInt("albums");
+                                    if (!curArtistJSON.isNull("link"))
+                                        curArtist.link = curArtistJSON.getString("link");
+                                    if (!curArtistJSON.isNull("description"))
+                                        curArtist.description = curArtistJSON.getString("description");
+
+                                    if (curArtistJSON.getJSONArray("genres") != null) {
+                                        tempArtistGenres = new ArrayList<String>();
+                                        curArtistGenresJSON = curArtistJSON.getJSONArray("genres");
+                                        for (int j = 0; j < curArtistGenresJSON.length(); j++) {
+                                            tempArtistGenres.add(curArtistGenresJSON.getString(j));
+                                        }
+                                        curArtist.genres = tempArtistGenres;
+                                    }
+
+                                    if (curArtistJSON.getJSONObject("cover") != null) {
+                                        curArtistCoverJSON = curArtistJSON.getJSONObject("cover");
+                                        tempArtistCovers = new Artist.Covers(
+                                                curArtistCoverJSON.getString("small"),
+                                                curArtistCoverJSON.getString("big")
+                                        );
+                                        curArtist.covers = tempArtistCovers;
+                                    }*/
+
+                                    artists.add(artist);
+                                } catch (JSONException e) {
+                                    Log.e(LOG_TAG, "unexpected JSON exception", e);
+                                    // Do something to recover ... or kill the app.
+                                }
+                            }
+
+                            adapter = new ArtistAdapter(mainActivity.this, artists);
+
+                            Log.d(LOG_TAG, Integer.toString(artists.size()));
+                            //Log.d(LOG_TAG, jsonString);
+
+                            gvMain.setAdapter(adapter);
+
+                        } catch (/*UnsupportedEncodingException |*/ JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+
+                new Response.ErrorListener() {
+                    @Override
+                    public void  onErrorResponse(VolleyError error) {
+
+                    }
+                }
+        );
+
+        requestQueue.add(jsonArtistsRequest);
+
+
+//        new ParseTask().execute();
 
         gvMain.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -88,7 +203,65 @@ public class mainActivity extends AppCompatActivity {
     }
 
 
-    //Асинхронно делаем запрос и парсим полученный JSON
+    private class CacheRequest extends Request<NetworkResponse> {
+        private final Response.Listener<NetworkResponse> mListener;
+        private final Response.ErrorListener mErrorListener;
+
+        public CacheRequest(int method, String url, Response.Listener<NetworkResponse> listener, Response.ErrorListener errorListener) {
+            super(method, url, errorListener);
+            this.mListener = listener;
+            this.mErrorListener = errorListener;
+        }
+
+        @Override
+        protected Response<NetworkResponse> parseNetworkResponse(NetworkResponse response) {
+            Cache.Entry cacheEntry = HttpHeaderParser.parseCacheHeaders(response);
+            if (cacheEntry == null) {
+                cacheEntry = new Cache.Entry();
+            }
+            final long cacheHitButRefreshed = 3 * 60 * 1000; // in 3 minutes cache will be hit, but also refreshed on background
+            final long cacheExpired = 24 * 60 * 60 * 1000; // in 24 hours this cache entry expires completely
+            long now = System.currentTimeMillis();
+            final long softExpire = now + cacheHitButRefreshed;
+            final long ttl = now + cacheExpired;
+            cacheEntry.data = response.data;
+            cacheEntry.softTtl = softExpire;
+            cacheEntry.ttl = ttl;
+            String headerValue;
+            headerValue = response.headers.get("Date");
+            if (headerValue != null) {
+                cacheEntry.serverDate = HttpHeaderParser.parseDateAsEpoch(headerValue);
+            }
+            headerValue = response.headers.get("Last-Modified");
+            if (headerValue != null) {
+                cacheEntry.lastModified = HttpHeaderParser.parseDateAsEpoch(headerValue);
+            }
+            cacheEntry.responseHeaders = response.headers;
+            return Response.success(response, cacheEntry);
+        }
+
+        @Override
+        protected void deliverResponse(NetworkResponse response) {
+            mListener.onResponse(response);
+        }
+
+        @Override
+        protected VolleyError parseNetworkError(VolleyError volleyError) {
+            return super.parseNetworkError(volleyError);
+        }
+
+        @Override
+        public void deliverError(VolleyError error) {
+            mErrorListener.onErrorResponse(error);
+        }
+    }
+
+
+
+
+
+
+   /* //Асинхронно делаем запрос и парсим полученный JSON
     private class ParseTask extends AsyncTask<Void, Void, String> {
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
@@ -176,7 +349,7 @@ public class mainActivity extends AppCompatActivity {
                         curArtist.covers = tempArtistCovers;
                     }
 
-                    /*curArtist = new Artist(
+                    *//*curArtist = new Artist(
                             curArtistJSON.getInt("id"),
                             curArtistJSON.getString("name"),
                             tempArtistGenres,
@@ -185,12 +358,12 @@ public class mainActivity extends AppCompatActivity {
                             curArtistJSON.getString("link"),
                             curArtistJSON.getString("description"),
                             tempArtistCovers
-                    );*/
+                    );*//*
 
                     artists.add(curArtist);
                 }
 
-                /*// 1. достаем инфо о втором друге - индекс 1
+                /*//*/ 1. достаем инфо о втором друге - индекс 1
                 JSONObject secondFriend = friends.getJSONObject(1);
                 secondName = secondFriend.getString("name");
                 Log.d(LOG_TAG, "Второе имя: " + secondName);
@@ -208,7 +381,7 @@ public class mainActivity extends AppCompatActivity {
                     Log.d(LOG_TAG, "phone: " + phone);
                     Log.d(LOG_TAG, "email: " + email);
                     Log.d(LOG_TAG, "skype: " + skype);
-                }*/
+                }*//*
 
 
 
@@ -241,9 +414,9 @@ public class mainActivity extends AppCompatActivity {
         artists.add(new Artist(1, "Name2", genre, 10, 15, "link2", "description2"));
         artists.add(new Artist(2, "Name3", genre, 10, 15, "link1", "description1"));
         artists.add(new Artist(3, "Name4", genre, 10, 15, "link2", "description2"));
-*/
+
         adapter = new ArtistAdapter(this, artists);
       //  adapter = new ArrayAdapter<String>(this, R.layout.item, R.id.tvText, artists);
         gvMain.setAdapter(adapter);
-    }
+    }*/
 }

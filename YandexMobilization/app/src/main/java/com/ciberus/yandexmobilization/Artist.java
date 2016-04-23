@@ -1,6 +1,8 @@
 package com.ciberus.yandexmobilization;
 
-import android.media.Image;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -18,9 +20,9 @@ public class Artist {
     protected int albums;
     protected String link;
     protected String description;
-    protected Covers covers;
+    protected Cover cover;
 
-    public Artist(int id, String name, ArrayList<String> genres, int tracks, int albums, String link, String description, Covers covers) {
+    public Artist(int id, String name, ArrayList<String> genres, int tracks, int albums, String link, String description, Cover cover) {
         this.id = id;
         this.name = name;
         this.genres = genres;
@@ -28,22 +30,49 @@ public class Artist {
         this.albums = albums;
         this.link = link;
         this.description = description;
-        this.covers = covers;
+        this.cover = cover;
     }
+
 
     public Artist(){};
 
     //Вспомогательный класс Covers
-    public static class Covers {
-        protected String linkSmallCover;
-        protected String linkBigCover;
-        protected Image smallCover;
+    public static class Cover {
+        protected String small;
+        protected String big;
+        /*protected Image smallCover;
         protected Image bigCover;
-
-        public Covers(String linkSmallCover, String linkBigCover)
+*/
+        public Cover(String small, String big)
         {
-            this.linkSmallCover = linkSmallCover;
-            this.linkBigCover = linkBigCover;
+            this.small = small;
+            this.big = big;
         }
+    }
+
+    public static Artist deserialize(JSONObject json) throws JSONException {
+
+        JSONArray genresJSON = json.getJSONArray("genres");
+
+        ArrayList<String> genres = new ArrayList<String>();
+        if (genresJSON != null) {
+            int len = genresJSON.length();
+            for (int i=0;i<len;i++){
+                genres.add(genresJSON.get(i).toString());
+            }
+        }
+
+        JSONObject cover = json.getJSONObject("cover");
+
+        return new Artist(
+                json.optInt("id"),
+                json.optString("name"),
+                genres,
+                json.optInt("tracks"),
+                json.optInt("albums"),
+                json.optString("link"),
+                json.optString("description"),
+                new Cover(cover.optString("small"),
+                        cover.optString("big")));
     }
 }

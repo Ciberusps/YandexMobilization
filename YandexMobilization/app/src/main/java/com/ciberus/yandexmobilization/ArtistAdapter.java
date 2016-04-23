@@ -58,26 +58,26 @@ public class ArtistAdapter extends BaseAdapter {
             view = lInflater.inflate(R.layout.item, parent, false);
         }
 
-        Artist p = getArtist(position);
+        Artist artist = getArtist(position);
 
         // заполняем View в пункте списка данными из товаров: наименование, цена
         // и картинка
 
 //        ((ImageView) view.findViewById(R.id.ivArtistPreview)).setImageResource(R.color.colorPrimary); /*setImageURI(p.covers.smallCover);*/
-        imageLoader.displayImage(p.covers.linkSmallCover, ((ImageView) view.findViewById(R.id.ivArtistPreview)));
+        imageLoader.displayImage(artist.cover.small, ((ImageView) view.findViewById(R.id.ivArtistPreview)));
 
-        ((TextView) view.findViewById(R.id.tvName)).setText(p.name.toString());
+        ((TextView) view.findViewById(R.id.tvName)).setText(artist.name.toString());
 
         String genres = "";
-        for (int i = 0; i < p.genres.size(); i++)
+        for (int i = 0; i < artist.genres.size(); i++)
         {
-            genres += p.genres.get(i);
-            if (i < p.genres.size()-1)
+            genres += artist.genres.get(i);
+            if (i < artist.genres.size()-1)
                 genres += ", ";
         }
         ((TextView) view.findViewById(R.id.tvGenres)).setText(genres);
 
-        ((TextView) view.findViewById(R.id.tvAlbumsAndSongs)).setText(p.albums + " альбомов, " + p.tracks + " песен");
+        ((TextView) view.findViewById(R.id.tvAlbumsAndSongs)).setText(artist.albums + " альбомов, " + artist.tracks + " песен");
         //((ImageView) view.findViewById(R.id.ivImage)).setImageResource(p.image);
 
         //CheckBox cbBuy = (CheckBox) view.findViewById(R.id.cbBox);

@@ -63,7 +63,7 @@ public class aboutArtistActivity extends AppCompatActivity {
                 genres += ", ";
         }
 
-        if (ivCoverBig != null) imageLoader.displayImage(artist.covers.linkBigCover, ivCoverBig);
+        if (ivCoverBig != null) imageLoader.displayImage(artist.cover.big, ivCoverBig);
         if (ivCoverBig != null) tvGenres.setText(genres);
         if (ivCoverBig != null) tvAlbumsAndSongs.setText(artist.albums + " альбомов • " + artist.tracks + " песен");
         if (ivCoverBig != null) tvBiography.setText(artist.description);

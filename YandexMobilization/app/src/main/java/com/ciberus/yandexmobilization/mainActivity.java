@@ -1,11 +1,22 @@
 package com.ciberus.yandexmobilization;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewDebug;
+import android.widget.AdapterView;
 import android.widget.GridView;
+
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import com.nostra13.universalimageloader.core.display.SimpleBitmapDisplayer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,9 +37,10 @@ public class mainActivity extends AppCompatActivity {
         electronics
     }*/
 
-    ArrayList<Artist> artists;
+    public static ArrayList<Artist> artists;
     ArtistAdapter adapter;
     GridView gvMain;
+    ImageLoader imageLoader;
     String requestArtistsURL = "http://cache-default03e.cdn.yandex.net/download.cdn.yandex.net/mobilization-2016/artists.json";
 
     public static String LOG_TAG = "my_log";
@@ -36,17 +48,51 @@ public class mainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        DisplayImageOptions options = new DisplayImageOptions.Builder()
+                .showStubImage(R.drawable.unknown)
+                .resetViewBeforeLoading(true)  // default
+                .cacheInMemory(true) // default
+                .cacheOnDisk(true) // default
+                .imageScaleType(ImageScaleType.IN_SAMPLE_POWER_OF_2) // default
+                .build();
+
+        // Create global configuration and initialize ImageLoader with this config
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
+                .memoryCacheSize(50 * 1024 * 1024) // 50 MB
+                .defaultDisplayImageOptions(options)
+                //.imageDecoder(new NutraBaseImageDecoder(true))
+                .build();
+        imageLoader = ImageLoader.getInstance();
+        imageLoader.init(config);
+
         setContentView(R.layout.activity_main);
 
         gvMain = (GridView)findViewById(R.id.gvMain);
 
         new ParseTask().execute();
+
+        gvMain.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View v,
+                                    int position, long id) {
+
+                //Отправляем id изображения в класс aboutArtistActivity:
+                Intent aboutArtistActivityIntent = new Intent(getApplicationContext(), aboutArtistActivity.class);
+                //Передаем необходимый index:
+                aboutArtistActivityIntent.putExtra("id", position);
+                startActivity(aboutArtistActivityIntent);
+            }
+        });
         //test();
     }
 
+
+    //Асинхронно делаем запрос и парсим полученный JSON
     private class ParseTask extends AsyncTask<Void, Void, String> {
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
+
         String resultJson = "";
 
         @Override

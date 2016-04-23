@@ -9,6 +9,8 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.nostra13.universalimageloader.core.ImageLoader;
+
 import java.util.ArrayList;
 
 /**
@@ -18,12 +20,15 @@ public class ArtistAdapter extends BaseAdapter {
     Context ctx;
     LayoutInflater lInflater;
     ArrayList<Artist> objects;
+    ImageLoader imageLoader;
+
 
     ArtistAdapter(Context context, ArrayList<Artist> artists) {
         ctx = context;
         objects = artists;
         lInflater = (LayoutInflater) ctx
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        imageLoader = ImageLoader.getInstance();
     }
 
     // кол-во элементов
@@ -57,8 +62,12 @@ public class ArtistAdapter extends BaseAdapter {
 
         // заполняем View в пункте списка данными из товаров: наименование, цена
         // и картинка
-        ((ImageView) view.findViewById(R.id.ivArtistPreview)).setImageResource(R.color.colorPrimary); /*setImageURI(p.covers.smallCover);*/
+
+//        ((ImageView) view.findViewById(R.id.ivArtistPreview)).setImageResource(R.color.colorPrimary); /*setImageURI(p.covers.smallCover);*/
+        imageLoader.displayImage(p.covers.linkSmallCover, ((ImageView) view.findViewById(R.id.ivArtistPreview)));
+
         ((TextView) view.findViewById(R.id.tvName)).setText(p.name.toString());
+
         String genres = "";
         for (int i = 0; i < p.genres.size(); i++)
         {
@@ -67,6 +76,7 @@ public class ArtistAdapter extends BaseAdapter {
                 genres += ", ";
         }
         ((TextView) view.findViewById(R.id.tvGenres)).setText(genres);
+
         ((TextView) view.findViewById(R.id.tvAlbumsAndSongs)).setText(p.albums + " альбомов, " + p.tracks + " песен");
         //((ImageView) view.findViewById(R.id.ivImage)).setImageResource(p.image);
 

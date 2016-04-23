@@ -1,5 +1,6 @@
 package com.ciberus.yandexmobilization;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,11 +14,11 @@ import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 
 public class aboutArtistActivity extends AppCompatActivity {
 
-    ImageLoader imageLoader;
-    ImageView ivCoverBig;
-    TextView tvGenres;
-    TextView tvAlbumsAndSongs;
-    TextView tvBiography;
+    private ImageLoader imageLoader;
+    private ImageView ivCoverBig;
+    private TextView tvGenres;
+    private TextView tvAlbumsAndSongs;
+    private TextView tvBiography;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,33 +27,32 @@ public class aboutArtistActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
+        //Инициализируем UIL
+        //Создаем дефолтные опции отображения изображения
         DisplayImageOptions options = new DisplayImageOptions.Builder()
                 .showStubImage(R.drawable.unknown)
-                .resetViewBeforeLoading(true)  // default
-                .cacheInMemory(true) // default
-                .cacheOnDisk(true) // default
-                .imageScaleType(ImageScaleType.IN_SAMPLE_POWER_OF_2) // default
+                .resetViewBeforeLoading(true)
+                .cacheInMemory(true)
+                .cacheOnDisk(true)
+                .imageScaleType(ImageScaleType.IN_SAMPLE_POWER_OF_2)
                 .build();
 
-        // Create global configuration and initialize ImageLoader with this config
+        // Создаем глобальную конфигурацию и инициализируем UIL с помощью конфига
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
                 .memoryCacheSize(50 * 1024 * 1024) // 50 MB
                 .defaultDisplayImageOptions(options)
-                //.imageDecoder(new NutraBaseImageDecoder(true))
                 .build();
         imageLoader = ImageLoader.getInstance();
         imageLoader.init(config);
 
-
-        int position = intent.getExtras().getInt("id");
+        int position = intent.getExtras().getInt("id"); //Узнаем id отправленный из главного активити
         Artist artist = mainActivity.artists.get(position);
 
-
-        ivCoverBig = ((ImageView) findViewById(R.id.ivCoverBig));
-        tvGenres = ((TextView) findViewById(R.id.tvGenres));
-        tvAlbumsAndSongs = ((TextView) findViewById(R.id.tvAlbumsAndSongs));
-        tvBiography = ((TextView) findViewById(R.id.tvBiography));
-
+        //Находим необходимые view по id
+        ivCoverBig = ((ImageView) findViewById(R.id.image_cover_big));
+        tvGenres = ((TextView) findViewById(R.id.text_genres));
+        tvAlbumsAndSongs = ((TextView) findViewById(R.id.text_albums_and_tracks));
+        tvBiography = ((TextView) findViewById(R.id.text_biography));
 
         //Выделить в отдельную функцию
         String genres = "";
@@ -63,11 +63,11 @@ public class aboutArtistActivity extends AppCompatActivity {
                 genres += ", ";
         }
 
+        //Заполняем активити
+        setTitle(artist.name);
         if (ivCoverBig != null) imageLoader.displayImage(artist.cover.big, ivCoverBig);
         if (ivCoverBig != null) tvGenres.setText(genres);
-        if (ivCoverBig != null) tvAlbumsAndSongs.setText(artist.albums + " альбомов • " + artist.tracks + " песен");
+        if (ivCoverBig != null) tvAlbumsAndSongs.setText(artist.takeAlbumsAndTracksList(Artist.AlbumsAndTracksSeparator.dot));
         if (ivCoverBig != null) tvBiography.setText(artist.description);
-
-        //ImageView imageView = (ImageView) findViewById(R.id.full_image_view);
     }
 }

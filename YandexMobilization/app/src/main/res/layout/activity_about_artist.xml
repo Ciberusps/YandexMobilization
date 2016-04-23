@@ -21,7 +21,7 @@
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/ivCoverBig"
+                android:id="@+id/image_cover_big"
                 android:src="@drawable/unknown"
                 android:scaleType="centerCrop"
                 android:layout_weight="5.22" />
@@ -38,14 +38,14 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:text="Small Text"
-                    android:id="@+id/tvGenres" />
+                    android:id="@+id/text_genres" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:text="Small Text"
-                    android:id="@+id/tvAlbumsAndSongs"
+                    android:id="@+id/text_albums_and_tracks"
                     android:layout_marginTop="20dp" />
 
                 <TextView
@@ -53,16 +53,17 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceLarge"
                     android:text="@string/biography"
-                    android:id="@+id/tvBiographyTitle"
+                    android:id="@+id/text_biography_title"
                     android:layout_marginTop="15dp" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/tvBiography"
+                    android:id="@+id/text_biography"
                     android:layout_weight="0.58"
                     android:layout_marginTop="10dp"
-                    android:textColor="#000000" />
+                    android:textColor="#000000"
+                    android:text="Текст" />
 
             </LinearLayout>
 

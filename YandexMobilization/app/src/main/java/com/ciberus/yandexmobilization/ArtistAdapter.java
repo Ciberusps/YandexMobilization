@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -16,12 +15,12 @@ import java.util.ArrayList;
 /**
  * Created by Ciber on 20.04.2016.
  */
+//Адаптер для "Исполнителей"
 public class ArtistAdapter extends BaseAdapter {
     Context ctx;
     LayoutInflater lInflater;
     ArrayList<Artist> objects;
     ImageLoader imageLoader;
-
 
     ArtistAdapter(Context context, ArrayList<Artist> artists) {
         ctx = context;
@@ -52,45 +51,26 @@ public class ArtistAdapter extends BaseAdapter {
     // пункт списка
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        // используем созданные, но не используемые view
         View view = convertView;
         if (view == null) {
-            view = lInflater.inflate(R.layout.item, parent, false);
+            view = lInflater.inflate(R.layout.item_artist, parent, false);
         }
 
         Artist artist = getArtist(position);
 
-        // заполняем View в пункте списка данными из товаров: наименование, цена
-        // и картинка
+        // Заполняем View в пункте списка данными из массива "Исполнителей": картинка, имя, жанры, альбомы и треки
+        imageLoader.displayImage(artist.cover.small, ((ImageView) view.findViewById(R.id.image_artist_preview))); //Загружаем и кешируем картинку с помощью библиотеки UIL
 
-//        ((ImageView) view.findViewById(R.id.ivArtistPreview)).setImageResource(R.color.colorPrimary); /*setImageURI(p.covers.smallCover);*/
-        imageLoader.displayImage(artist.cover.small, ((ImageView) view.findViewById(R.id.ivArtistPreview)));
+        ((TextView) view.findViewById(R.id.text_name)).setText(artist.name.toString());
 
-        ((TextView) view.findViewById(R.id.tvName)).setText(artist.name.toString());
+        ((TextView) view.findViewById(R.id.text_genres)).setText(artist.takeGenresList());
 
-        String genres = "";
-        for (int i = 0; i < artist.genres.size(); i++)
-        {
-            genres += artist.genres.get(i);
-            if (i < artist.genres.size()-1)
-                genres += ", ";
-        }
-        ((TextView) view.findViewById(R.id.tvGenres)).setText(genres);
+        ((TextView) view.findViewById(R.id.text_albums_and_tracks)).setText(artist.takeAlbumsAndTracksList(Artist.AlbumsAndTracksSeparator.comma));
 
-        ((TextView) view.findViewById(R.id.tvAlbumsAndSongs)).setText(artist.albums + " альбомов, " + artist.tracks + " песен");
-        //((ImageView) view.findViewById(R.id.ivImage)).setImageResource(p.image);
-
-        //CheckBox cbBuy = (CheckBox) view.findViewById(R.id.cbBox);
-        // присваиваем чекбоксу обработчик
-        //cbBuy.setOnCheckedChangeListener(myCheckChangList);
-        // пишем позицию
-        //cbBuy.setTag(position);
-        // заполняем данными из товаров: в корзине или нет
-        //cbBuy.setChecked(p.box);
         return view;
     }
 
-    // товар по позиции
+    // Артист по позиции
     Artist getArtist(int position) {
         return ((Artist) getItem(position));
     }

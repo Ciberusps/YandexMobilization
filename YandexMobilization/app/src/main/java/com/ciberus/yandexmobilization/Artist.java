@@ -22,6 +22,11 @@ public class Artist {
     protected String description;
     protected Cover cover;
 
+    public enum AlbumsAndTracksSeparator {
+        dot,
+        comma
+    }
+
     public Artist(int id, String name, ArrayList<String> genres, int tracks, int albums, String link, String description, Cover cover) {
         this.id = id;
         this.name = name;
@@ -33,21 +38,52 @@ public class Artist {
         this.cover = cover;
     }
 
+    public Artist() {} //Конструктор без параметров
 
-    public Artist(){};
+    //Возвращает список жанров через запятую
+    public String takeGenresList()
+    {
+        String genres = "";
 
-    //Вспомогательный класс Covers
-    public static class Cover {
-        protected String small;
-        protected String big;
-        /*protected Image smallCover;
-        protected Image bigCover;
-*/
-        public Cover(String small, String big)
+        for (int i = 0; i < this.genres.size(); i++)
         {
-            this.small = small;
-            this.big = big;
+            genres += this.genres.get(i);
+            if (i < this.genres.size()-1)
+                genres += ", ";
         }
+
+        return genres;
+    }
+
+    //Возвращет колв-ов альбомов и треков через разделитель
+    public String takeAlbumsAndTracksList(AlbumsAndTracksSeparator separator)
+    {
+        String albumsAndTracks = this.albums + " ";
+
+        /*if (this.albums == 1 || this.albums == 21)
+            albumsAndTracks+= " альбом";
+        else if ((this.albums >= 2 && this.albums <= 4))
+            albumsAndTracks+= " альбома";
+        else if (this.albums >=5 && this.albums <= 20)
+            albumsAndTracks+= " альбомов";
+*/
+        if ((this.albums % 10 == 1) && (this.albums % 100 != 11))
+            albumsAndTracks += "альбом";
+        else if ((this.albums % 10 >= 2) && (this.albums % 10 <= 4) && ((this.albums % 100 < 10) || (this.albums % 100 >= 20)))
+            albumsAndTracks += "альбома";
+        else
+            albumsAndTracks += "альбомов";
+
+        albumsAndTracks+= ((separator == AlbumsAndTracksSeparator.comma) ? ", " : " • ") + this.tracks + " ";
+
+        if ((this.tracks % 10 == 1) && (this.tracks % 100 != 11))
+            albumsAndTracks += "песня";
+        else if ((this.tracks % 10 >= 2) && (this.tracks % 10 <= 4) && ((this.tracks % 100 < 10) || (this.tracks % 100 >= 20)))
+            albumsAndTracks += "песни";
+        else
+            albumsAndTracks += "песен";
+
+        return albumsAndTracks;
     }
 
     public static Artist deserialize(JSONObject json) throws JSONException {
@@ -62,7 +98,7 @@ public class Artist {
             }
         }
 
-        JSONObject cover = json.getJSONObject("cover");
+        JSONObject coverJSON = json.getJSONObject("cover");
 
         return new Artist(
                 json.optInt("id"),
@@ -72,7 +108,7 @@ public class Artist {
                 json.optInt("albums"),
                 json.optString("link"),
                 json.optString("description"),
-                new Cover(cover.optString("small"),
-                        cover.optString("big")));
+                new Cover(coverJSON.optString("small"),
+                        coverJSON.optString("big")));
     }
 }
